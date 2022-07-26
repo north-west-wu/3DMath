@@ -1,9 +1,10 @@
 using System;
+using System.Data.SqlTypes;
 using UnityEngine;
 
 namespace MyMath
 {
-    public class Mat3x3 : IEquatable<Mat3x3>
+    public class Mat3x3
     {
         #region 字段
 
@@ -14,7 +15,7 @@ namespace MyMath
         //零矩阵
         public static readonly Mat3x3 Zero = new Mat3x3(Vec3.Zero, Vec3.Zero, Vec3.Zero);
         //单位矩阵
-        public static readonly Mat3x3 Identity = new Mat3x3(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        public static readonly Mat3x3 Identity = new Mat3x3(1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f);
 
         #endregion
 
@@ -33,6 +34,27 @@ namespace MyMath
         public float Determinant =>
             m11 * m22 * m33 + m12 * m23 * m31 + m13 * m21 * m32
             - m13 * m22 * m31 - m12 * m21 * m33 - m11 * m23 * m32;
+        
+        //判断是否是正交矩阵
+        public bool IsOrthogonal
+        {
+            get
+            {
+                Vec3 r1 = new Vec3(m11, m12, m13);
+                Vec3 r2 = new Vec3(m21, m22, m23);
+                Vec3 r3 = new Vec3(m31, m32, m33);
+
+                return Math.Abs(Vec3.Dot(r1, r1) - 1) < 1e-6 &&
+                       Math.Abs(Vec3.Dot(r2, r2) - 1) < 1e-6 &&
+                       Math.Abs(Vec3.Dot(r3, r3) - 1) < 1e-6 &&
+                       Math.Abs(Vec3.Dot(r1, r2)) < 1e-6 &&
+                       Math.Abs(Vec3.Dot(r1, r3)) < 1e-6 &&
+                       Math.Abs(Vec3.Dot(r2, r1)) < 1e-6 &&
+                       Math.Abs(Vec3.Dot(r2, r3)) < 1e-6 &&
+                       Math.Abs(Vec3.Dot(r3, r1)) < 1e-6 &&
+                       Math.Abs(Vec3.Dot(r3, r2)) < 1e-6;
+            }
+        }
 
         #endregion
 
@@ -101,6 +123,15 @@ namespace MyMath
                 p1.m31 - p2.m31, p1.m32 - p2.m32, p1.m33 - p2.m33);
         }
         
+        //负矩阵
+        public static Mat3x3 operator -(Mat3x3 p1)
+        {
+            return new Mat3x3(
+                -p1.m11, -p1.m12, -p1.m13,
+                -p1.m21, -p1.m22, -p1.m23,
+                -p1.m31, -p1.m32, -p1.m33);
+        }
+
         //矩阵的减法
         public static Mat3x3 operator -(Mat3x3 p1, Mat3x3 p2)
         {
@@ -127,15 +158,15 @@ namespace MyMath
 
         public static bool operator ==(Mat3x3 p1, Mat3x3 p2)
         {
-            return Mathf.Abs(p1.m11 - p2.m11) < 1e-5 &&
-                   Mathf.Abs(p1.m12 - p2.m12) < 1e-5 &&
-                   Mathf.Abs(p1.m13 - p2.m13) < 1e-5 &&
-                   Mathf.Abs(p1.m21 - p2.m21) < 1e-5 &&
-                   Mathf.Abs(p1.m22 - p2.m22) < 1e-5 &&
-                   Mathf.Abs(p1.m23 - p2.m23) < 1e-5 &&
-                   Mathf.Abs(p1.m31 - p2.m31) < 1e-5 &&
-                   Mathf.Abs(p1.m32 - p2.m32) < 1e-5 &&
-                   Mathf.Abs(p1.m33 - p2.m33) < 1e-5;
+            return Mathf.Abs(p1.m11 - p2.m11) < 1e-6 &&
+                   Mathf.Abs(p1.m12 - p2.m12) < 1e-6 &&
+                   Mathf.Abs(p1.m13 - p2.m13) < 1e-6 &&
+                   Mathf.Abs(p1.m21 - p2.m21) < 1e-6 &&
+                   Mathf.Abs(p1.m22 - p2.m22) < 1e-6 &&
+                   Mathf.Abs(p1.m23 - p2.m23) < 1e-6 &&
+                   Mathf.Abs(p1.m31 - p2.m31) < 1e-6 &&
+                   Mathf.Abs(p1.m32 - p2.m32) < 1e-6 &&
+                   Mathf.Abs(p1.m33 - p2.m33) < 1e-6;
         }
 
         public static bool operator !=(Mat3x3 p1, Mat3x3 p2)
@@ -167,6 +198,15 @@ namespace MyMath
             return new Mat3x3(k, 0f, 0f, 0f, k, 0f, 0f, 0f, k);
         }
         
+        //反射矩阵
+        public static Mat3x3 FormReflectionAxis(Vec3 axis)
+        {
+            return new Mat3x3(
+                1 - 2 * axis.x * axis.x, -2 * axis.x * axis.y, -2 * axis.x * axis.z,
+                -2 * axis.x * axis.y, 1 - 2 * axis.y, -2 * axis.y * axis.z,
+                -2 * axis.x * axis.z, -2 * axis.y * axis.z, 1 - 2 * axis.z * axis.z);
+        }
+        
         //欧拉角转换为旋转矩阵
         public static Mat3x3 FromEuler(Vec3 euler)
         {
@@ -182,6 +222,27 @@ namespace MyMath
                 cy * cz, cz * sx * sy - cx * sz, cx * cz * sy + sx * sz,
                 cy * sz, cx * cz + sx * sy * sz, -cz * sx + cx * sy * sz,
                 -sy, cy * sx, cx * cy);
+        }
+
+        public static Mat3x3 Inverse(Mat3x3 p1)
+        {
+            float determinant = p1.Determinant;
+            if (determinant == 0)
+            {
+                throw new AggregateException(nameof(Inverse));
+            }
+
+            determinant = 1 / determinant;
+            return new Mat3x3(
+                (p1.m22 * p1.m33 - p1.m23 * p1.m32) * determinant,
+                (p1.m21 * p1.m33 - p1.m23 * p1.m31) * determinant,
+                (p1.m21 * p1.m32 - p1.m22 * p1.m31) * determinant,
+                (p1.m12 * p1.m33 - p1.m13 * p1.m32) * determinant,
+                (p1.m11 * p1.m33 - p1.m13 * p1.m31) * determinant,
+                (p1.m11 * p1.m32 - p1.m12 * p1.m31) * determinant,
+                (p1.m12 * p1.m23 - p1.m13 * p1.m22) * determinant,
+                (p1.m11 * p1.m23 - p1.m13 * p1.m21) * determinant,
+                (p1.m11 * p1.m22 - p1.m12 * p1.m21) * determinant);
         }
 
         public bool Equals(Mat3x3 other)
