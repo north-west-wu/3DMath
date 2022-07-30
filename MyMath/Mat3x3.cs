@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace MyMath
 {
-    public class Mat3x3
+    public class Mat3x3 : IEquatable<Mat3x3>
     {
         #region 字段
 
@@ -34,6 +34,25 @@ namespace MyMath
         public float Determinant =>
             m11 * m22 * m33 + m12 * m23 * m31 + m13 * m21 * m32
             - m13 * m22 * m31 - m12 * m21 * m33 - m11 * m23 * m32;
+
+        public Mat3x3 Inverse
+        {
+            get
+            {
+                float determinant = 1 / Determinant;
+
+                return new Mat3x3(
+                    (m22 * m33 - m23 * m32) * determinant,
+                    (m21 * m33 - m23 * m31) * determinant,
+                    (m21 * m32 - m22 * m31) * determinant,
+                    (m12 * m33 - m13 * m32) * determinant,
+                    (m11 * m33 - m13 * m31) * determinant,
+                    (m11 * m32 - m12 * m31) * determinant,
+                    (m12 * m23 - m13 * m22) * determinant,
+                    (m11 * m23 - m13 * m21) * determinant,
+                    (m11 * m22 - m12 * m21) * determinant).Transpose;
+            }
+        }
         
         //判断是否是正交矩阵
         public bool IsOrthogonal
@@ -222,27 +241,6 @@ namespace MyMath
                 cy * cz, cz * sx * sy - cx * sz, cx * cz * sy + sx * sz,
                 cy * sz, cx * cz + sx * sy * sz, -cz * sx + cx * sy * sz,
                 -sy, cy * sx, cx * cy);
-        }
-
-        public static Mat3x3 Inverse(Mat3x3 p1)
-        {
-            float determinant = p1.Determinant;
-            if (determinant == 0)
-            {
-                throw new AggregateException(nameof(Inverse));
-            }
-
-            determinant = 1 / determinant;
-            return new Mat3x3(
-                (p1.m22 * p1.m33 - p1.m23 * p1.m32) * determinant,
-                (p1.m21 * p1.m33 - p1.m23 * p1.m31) * determinant,
-                (p1.m21 * p1.m32 - p1.m22 * p1.m31) * determinant,
-                (p1.m12 * p1.m33 - p1.m13 * p1.m32) * determinant,
-                (p1.m11 * p1.m33 - p1.m13 * p1.m31) * determinant,
-                (p1.m11 * p1.m32 - p1.m12 * p1.m31) * determinant,
-                (p1.m12 * p1.m23 - p1.m13 * p1.m22) * determinant,
-                (p1.m11 * p1.m23 - p1.m13 * p1.m21) * determinant,
-                (p1.m11 * p1.m22 - p1.m12 * p1.m21) * determinant);
         }
 
         public bool Equals(Mat3x3 other)
