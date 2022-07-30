@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace MyMath
 {
-    public class Mat2x2
+    public class Mat2x2 : IEquatable<Mat2x2>
     {
         #region 字段
 
@@ -32,6 +32,18 @@ namespace MyMath
                        Math.Abs(Vec3.Dot(r2, r2) - 1) < 1e-6 &&
                        Math.Abs(Vec3.Dot(r1, r2)) < 1e-6 &&
                        Math.Abs(Vec3.Dot(r2, r1)) < 1e-6;
+            }
+        }
+
+        public Mat2x2 Inverse
+        {
+            get
+            {
+                float determinant = 1 / Determinant;
+            
+                return new Mat2x2(
+                    m22 * determinant, -m12 * determinant,
+                    -m21 * determinant, m11 * determinant).Transpose;
             }
         }
 
@@ -155,21 +167,6 @@ namespace MyMath
                 -2 * axis.x * axis.y, 1 - 2 * axis.y);
         }
         
-        //逆矩阵
-        public static Mat2x2 Inverse(Mat2x2 p1)
-        {
-            float determinant = p1.Determinant;
-            if (determinant == 0)
-            {
-                throw new AggregateException(nameof(Inverse));
-            }
-
-            determinant = 1 / determinant;
-            return new Mat2x2(
-                p1.m22 * determinant, -p1.m12 * determinant,
-                -p1.m21 * determinant, p1.m11 * determinant);
-        }
-
         public bool Equals(Mat2x2 other)
         {
             return m11.Equals(other.m11) && m12.Equals(other.m12) && 
