@@ -44,6 +44,14 @@ namespace MyMath
 
         #region 构造函数
 
+        public Vec4()
+        {
+            x = 0f;
+            y = 0f;
+            z = 0f;
+            w = 0f;
+        }
+        
         public Vec4(float x, float y, float z, float w)
         {
             this.x = x;
