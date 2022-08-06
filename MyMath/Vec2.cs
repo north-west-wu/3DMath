@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 namespace MyMath
 {
+    [Serializable]
     public class Vec2 : IEquatable<Vec2>
     {
         #region 字段
@@ -83,8 +84,8 @@ namespace MyMath
 
         public static bool operator !=(Vec2 v1, Vec2 v2)
         {
-            return Mathf.Abs(v1.x - v2.x) > 1e-5 ||
-                   Mathf.Abs(v1.y - v2.y) > 1e-5;
+            return Mathf.Abs(v1.x - v2.x) > 1e-6 ||
+                   Mathf.Abs(v1.y - v2.y) > 1e-6;
         }
 
         public static bool operator ==(Vec2 v1, Vec2 v2)
@@ -139,7 +140,17 @@ namespace MyMath
             t = Mathf.Clamp01(t);
             return new Vec2((end.x - start.x) * t + start.x, (end.y - start.y) * t + start.y);
         }
-
+        
+        public static Vec3 Slerp(Vec2 start, Vec2 end, float t)
+        {
+            Vec2 n1 = start.Normalized;
+            Vec2 n2 = end.Normalized;
+            float red = Mathf.Acos(Mathf.Clamp(Dot(n1, n2), -1f, 1f));
+            float sin = Mathf.Sin(red);
+    
+            return Mathf.Sin((1 - t) * red) / sin * start + Mathf.Sin(t * red) / sin * end;
+        }
+        
         public static float Dot(Vec2 v1, Vec2 v2)
         {
             return v1.x * v2.x + v1.y * v2.y;
@@ -163,11 +174,9 @@ namespace MyMath
 
         public static float FormCircularAngle(Vec2 v)
         {
-            Vec2 normal = v.Normalized;
-            return Mathf.Acos(v.x) * Mathf.Rad2Deg;
+            return Mathf.Atan2(v.y, v.x) * Mathf.Rad2Deg;
         }
         
-
         public bool Equals(Vec2 other)
         {
             if (ReferenceEquals(null, other)) return false;
