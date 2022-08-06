@@ -74,6 +74,78 @@ namespace MyMath
                        Math.Abs(Vec3.Dot(r3, r2)) < 1e-6;
             }
         }
+        //矩阵转换为欧拉角
+        public Vec3 ToEuler
+        {
+            get
+            {
+                var (b, p, h) = (0f, 0f, 0f);
+                p = Mathf.Asin(Mathf.Clamp(-m32, -1f, 1f));
+                if (Mathf.Abs(-m32) > 0.99999f)
+                {
+                    b = 0f;
+                    h = Mathf.Atan2(-m13, m11);
+                }
+                else
+                {
+                    h = Mathf.Atan2(m31, m33);
+                    b = Mathf.Atan2(m12, m22);
+                }
+
+                return new Vec3(p * Mathf.Rad2Deg, h * Mathf.Rad2Deg, b * Mathf.Rad2Deg);
+            }
+        }
+        //矩阵转换为四元数
+        public Quat ToQuat
+        {
+            get
+            {
+                float x = m11 - m22 - m33;
+                float y = m22 - m11 - m33;
+                float z = m33 - m11 - m22;
+                float w = m11 + m22 + m33;
+
+                (int idx, float num) = (0, x); 
+                if (num < y) (idx, num) = (1, y);
+                if (num < z) (idx, num) = (2, z);
+                if (num < w) (idx, num) = (3, w);
+
+                float val = Mathf.Sqrt(num + 1f) * 0.5f;
+                float mult = 1 / (4 * val);
+
+                switch (idx)
+                {
+                    case 0:
+                        x = val;
+                        y = (m12 + m21) * mult;
+                        z = (m31 + m13) * mult;
+                        w = (m23 - m32) * mult;
+                        break;
+                    case 1:
+                        x = (m12 + m21) * mult;
+                        y = val;
+                        z = (m23 + m32) * mult;
+                        w = (m31 - m13) * mult;
+                        break;
+                    case 2:
+                        x = (m31 + m13) * mult;
+                        y = (m23 + m32) * mult;
+                        z = val;
+                        w = (m12 - m21) * mult;
+                        break;
+                    case 3:
+                        x = (m23 - m32) * mult;
+                        y = (m31 - m13) * mult;
+                        z = (m12 - m21) * mult;
+                        w = val;
+                        break;
+                    default:
+                        throw new AggregateException();
+                }
+
+                return new Quat(x, y, z, w);
+            }
+        }
 
         #endregion
 
@@ -226,21 +298,48 @@ namespace MyMath
                 -2 * axis.x * axis.z, -2 * axis.y * axis.z, 1 - 2 * axis.z * axis.z);
         }
         
-        //欧拉角转换为旋转矩阵
-        public static Mat3x3 FromEuler(Vec3 euler)
+        //欧拉角转换为旋转矩阵，Unity 内部欧拉角是顺序是 Roll(Bank) -> Pitch -> Yaw(Handing)
+        public static Mat3x3 FromEuler(float x, float y, float z)
         {
-            float cx = Mathf.Cos(euler.x);
-            float sx = Mathf.Sin(euler.x);
-            float cy = Mathf.Cos(euler.y);
-            float sy = Mathf.Sin(euler.y);
-            float cz = Mathf.Cos(euler.z);
-            float sz = Mathf.Sin(euler.z);
-
-            // multiply ZYX
+            x *= Mathf.Deg2Rad;
+            y *= Mathf.Deg2Rad;
+            z *= Mathf.Deg2Rad;
+            float ch = Mathf.Cos(y);
+            float sh = Mathf.Sin(y);
+            float cp = Mathf.Cos(x);
+            float sp = Mathf.Sin(x);
+            float cb = Mathf.Cos(z);
+            float sb = Mathf.Sin(z);
+            
+            //ZXY 顺序
             return new Mat3x3(
-                cy * cz, cz * sx * sy - cx * sz, cx * cz * sy + sx * sz,
-                cy * sz, cx * cz + sx * sy * sz, -cz * sx + cx * sy * sz,
-                -sy, cy * sx, cx * cy);
+                ch * cb + sh * sp * sb, sb * cp, -sh * cb + ch * sp * sb,
+                -ch * sb + sh * sp * cb, cb * cp, sb * sh + ch * sp * cb,
+                sh * cp, -sp, ch * cp);
+        }
+
+        public static Mat3x3 FromEuler(Vec3 euler) => FromEuler(euler.x, euler.y, euler.z);
+
+        //四元数转化为矩阵
+        public static Mat3x3 FromQuat(Quat q)
+        {
+            float num1 = 2 * q.x;
+            float num2 = 2 * q.y;
+            float num3 = 2 * q.z;
+            float num4 = q.x * num1;
+            float num5 = q.y * num2;
+            float num6 = q.z * num3;
+            float num7 = q.x * num2;
+            float num8 = q.x * num3;
+            float num9 = q.y * num3;
+            float num10 = q.w * num1;
+            float num11 = q.w * num2;
+            float num12 = q.w * num3;
+
+            return new Mat3x3(
+                1 - num5 - num6, num7 + num12, num8 - num11,
+                num7 - num12, 1 - num4 - num6, num9 + num10,
+                num8 + num11, num9 - num10, 1 - num4 - num5);
         }
 
         public bool Equals(Mat3x3 other)
