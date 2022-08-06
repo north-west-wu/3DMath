@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace MyMath
 {
+    [Serializable]
     public class Vec3 : IEquatable<Vec3>
     {
         #region 字段
@@ -13,12 +14,12 @@ namespace MyMath
         
         public static readonly Vec3 One = new Vec3(1f, 1f, 1f);
         public static readonly Vec3 Zero = new Vec3(0f, 0f, 0f);
-        public static readonly Vec3 Up = new Vec3(0f, -1f, 0f);
+        public static readonly Vec3 Up = new Vec3(0f, 1f, 0f);
         public static readonly Vec3 Down = new Vec3(0f, -1f, 0f);
         public static readonly Vec3 Left = new Vec3(-1f, 0f, 0f);
         public static readonly Vec3 Right = new Vec3(1f, 0f, 0f);
         public static readonly Vec3 Forward = new Vec3(0f, 0f, 1f);
-        public static readonly Vec3 Back = new Vec3(0f, -1f, 0f);
+        public static readonly Vec3 Back = new Vec3(0f, 0, -1f);
 
         #endregion
 
@@ -31,7 +32,7 @@ namespace MyMath
         public float SqrMagnitude => x * x + y * y + z * z;
 
         //单位向量
-        public Vec3 Normalize
+        public Vec3 Normalized
         {
             get
             {
@@ -97,9 +98,9 @@ namespace MyMath
         //== 与 !=
         public static bool operator !=(Vec3 v1, Vec3 v2)
         {
-            return Mathf.Abs(v1.x - v2.x) > 1e-5 ||
-                   Mathf.Abs(v1.y - v2.y) > 1e-5 ||
-                   Mathf.Abs(v1.z - v2.z) > 1e-5;
+            return Mathf.Abs(v1.x - v2.x) > 1e-6 ||
+                   Mathf.Abs(v1.y - v2.y) > 1e-6 ||
+                   Mathf.Abs(v1.z - v2.z) > 1e-6;
         }
         
         public static bool operator ==(Vec3 v1, Vec3 v2)
@@ -119,8 +120,8 @@ namespace MyMath
         //求角度
         public static float Angle(Vec3 v1, Vec3 v2)
         {
-            Vec3 n1 = v1.Normalize;
-            Vec3 n2 = v2.Normalize;
+            Vec3 n1 = v1.Normalized;
+            Vec3 n2 = v2.Normalized;
             float val = Mathf.Clamp(Dot(n1, n2), -1f, 1f);
             return Mathf.Acos(val) * Mathf.Rad2Deg;
         }
@@ -152,7 +153,7 @@ namespace MyMath
             float l = v1.SqrMagnitude;
             if (l > maxLength * maxLength)
             {
-                return v1.Normalize * maxLength;
+                return v1.Normalized * maxLength;
             }
 
             return v1;
@@ -166,6 +167,17 @@ namespace MyMath
                 start.x + (end.x - start.x) * t,
                 start.y + (end.y - start.y) * t,    
                 start.z + (end.z - start.z) * t);
+        }
+        
+        //球形插值
+        public static Vec3 Slerp(Vec3 start, Vec3 end, float t)
+        {
+            Vec3 n1 = start.Normalized;
+            Vec3 n2 = end.Normalized;
+            float red = Mathf.Acos(Mathf.Clamp(Dot(n1, n2), -1f, 1f));
+            float sin = Mathf.Sin(red);
+    
+            return Mathf.Sin((1 - t) * red) / sin * start + Mathf.Sin(t * red) / sin * end;
         }
         
         //反射
@@ -186,7 +198,7 @@ namespace MyMath
             return v1 - HorizontalProject(v1, normal);
         }
         
-        //通过经纬获得球面位置
+        //通过极坐标得球面位置
         public static Vec3 FormSphericalPosition(float latitude, float longitude)
         {
             return new Vec3(
@@ -195,17 +207,17 @@ namespace MyMath
                 Mathf.Cos(latitude) * Mathf.Cos(longitude));
         }
         
-        //通过位置获得球面经纬
+        //通过笛卡尔坐标位置获得极坐标角度
         public static (float latitude, float longitude) SphericalPosition(Vec3 v1)
         {
-            Vec3 v = v1.Normalize;
+            Vec3 v = v1.Normalized;
             return (Mathf.Atan2(v.x, v.z), Mathf.Acos(v.y));
         }
         
         //绕轴旋转
         public static Vec3 RotateAround(Vec3 v, Vec3 axis, float angle)
         {
-            return Quaternion.AngleAxis(angle, axis.ToVector3) * v.ToVector3;
+            return v * Quat.FromAxisAngle(axis, angle);
         }
 
         public override string ToString()
