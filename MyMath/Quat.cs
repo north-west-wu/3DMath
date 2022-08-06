@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace MyMath
 {
+    [System.Serializable]
     public class Quat
     {
         #region 字段
@@ -64,6 +65,21 @@ namespace MyMath
         #endregion
 
         #region 运算符
+
+        public static Quat operator -(Quat q1)
+        {
+            return new Quat(-q1.x, -q1.y, -q1.z, -q1.w);
+        }
+
+        public static Quat operator +(Quat q1, Quat q2)
+        {
+            return new Quat(q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w);
+        }
+
+        public static Quat operator -(Quat q1, Quat q2)
+        {
+            return new Quat(q1.x - q2.x, q1.y - q2.y, q1.z - q2.z, q1.w - q2.w);
+        }
 
         public static Quat operator *(float k, Quat q)
         {
@@ -160,6 +176,31 @@ namespace MyMath
             return new Quat(q.x * mult, q.y * mult, q.z * mult, Mathf.Cos(newAlpha));
         }
         
+        //Lerp 和 Slerp 效果相同，但 Slerp 效率更快，所以我们一般使用 Slerp
+        public static Quat Lerp(Quat q1, Quat q2, float t)
+        {
+            //线性插值
+            return Exp(q2 * q1.Conjugate, t) * q1;
+        }
+
+        public static Quat Slerp(Quat q1, Quat q2, float t)
+        {
+            float p = Dot(q1, q2);
+
+            if (p < 0)
+            {
+                q2 = -q2;
+                p = -p;
+            }
+
+            if (p > 0.9999f) return q1;
+
+            float red = Mathf.Acos(p) * 2;
+            float sin = Mathf.Sin(red);
+
+            return Mathf.Sin((1 - t) * red) / sin * q1 + Mathf.Sin(t * red) / sin * q2;
+        }
+        
         public bool Equals(Quat other)
         {
             return x.Equals(other.x) && y.Equals(other.y) && z.Equals(other.z) && w.Equals(other.w);
@@ -183,6 +224,11 @@ namespace MyMath
                 hashCode = (hashCode * 397) ^ w.GetHashCode();
                 return hashCode;
             }
+        }
+
+        public override string ToString()
+        {
+            return $"<{x} {y} {z} {w}>";
         }
 
         #endregion
