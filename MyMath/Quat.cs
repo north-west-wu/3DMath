@@ -40,6 +40,54 @@ namespace MyMath
             }
         }
 
+        public Mat3x3 ToMat3x3
+        {
+            get
+            {
+                float num1 = 2 * x;
+                float num2 = 2 * y;
+                float num3 = 2 * z;
+                float num4 = x * num1;
+                float num5 = y * num2;
+                float num6 = z * num3;
+                float num7 = x * num2;
+                float num8 = x * num3;
+                float num9 = y * num3;
+                float num10 = w * num1;
+                float num11 = w * num2;
+                float num12 = w * num3;
+
+                return new Mat3x3(
+                    1 - num5 - num6, num7 + num12, num8 - num11,
+                    num7 - num12, 1 - num4 - num6, num9 + num10,
+                    num8 + num11, num9 - num10, 1 - num4 - num5);
+            }
+        }
+
+        public Vec3 ToEuler
+        {
+            get
+            {
+                float sp = -2.0f * (y * z - w * x);
+
+                var (p, h, b) = (0f, 0f, 0f);
+                if (Mathf.Abs(sp) > 0.9999f)
+                {
+                    p = Mathf.PI / 2 * sp;
+                    h = Mathf.Atan2(-x * z + w * y, 0.5f - y * y - z * z);
+                    b = 0f;
+                }
+                else
+                {
+                    p = Mathf.Asin(sp);
+                    h = Mathf.Atan2(x * z + w * y, 0.5f - x * x - y * y);
+                    b = Mathf.Atan2(x * y + w * z, 0.5f - x * x - z * z);
+                }
+
+                return new Vec3(p * Mathf.Rad2Deg, h * Mathf.Rad2Deg, b * Mathf.Rad2Deg);
+            }
+        }
+
         public Quaternion ToQuaternion => new Quaternion(x, y, z, w);
 
         #endregion
@@ -200,6 +248,29 @@ namespace MyMath
 
             return Mathf.Sin((1 - t) * red) / sin * q1 + Mathf.Sin(t * red) / sin * q2;
         }
+
+        public static Quat FormEuler(float x, float y, float z)
+        {
+            x = 0.5f * x * Mathf.Deg2Rad;
+            y = 0.5f * y * Mathf.Deg2Rad;
+            z = 0.5f * z * Mathf.Deg2Rad;
+            
+            float ch = Mathf.Cos(y);
+            float sh = Mathf.Sin(y);
+            float cp = Mathf.Cos(x);
+            float sp = Mathf.Sin(x);
+            float cb = Mathf.Cos(z);
+            float sb = Mathf.Sin(z);
+            
+            //由于四元数从右向左乘，所以顺序是 YXZ
+            return new Quat(
+                ch * sp * cb + sh * cp * sb,
+                sh * cp * cb - ch * sp * sb,
+                ch * cp * sb - sh * sp * cb,
+                ch * cp * cb + sh * sp * sb);
+        }
+
+        public static Quat FormEuler(Vec3 v) => FormEuler(v.x, v.y, v.z);
         
         public bool Equals(Quat other)
         {
