@@ -34,6 +34,18 @@ namespace MyMath
             return origin + distance * direction;
         }
 
+        public Vec3 ClosestPoint(Vec3 p)
+        {
+            float t = Vec3.Dot(direction, p - origin);
+            return origin + t * direction;
+        }
+
+        public bool IntersectToRay(Ray r1, Ray r2, out Vec3 v)
+        {
+            v = Vec3.Zero;
+            return true;
+        }
+
         #endregion
     }
 }
