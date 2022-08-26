@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace MyMath
 {
@@ -33,7 +33,13 @@ namespace MyMath
         {
             return origin + distance * direction;
         }
-
+        
+        public Vec2 ClosestPoint(Vec2 p)
+        {
+            float t = Vec2.Dot(direction, p - origin);
+            return origin + t * direction;
+        }
+        
         #endregion
     }
 }
