@@ -270,6 +270,17 @@ namespace MyMath
                 ch * cp * cb + sh * sp * sb);
         }
 
+        public static Quat FormToRotation(Vec3 fromDir, Vec3 toDir)
+        {
+            //保证传入的方向是归一化的
+            float red = Mathf.Acos(Mathf.Clamp(Vec3.Dot(fromDir, toDir), -1f, 1f)) * 0.5f;
+            Vec3 nor = Vec3.Cross(fromDir, toDir);
+            float sin = Mathf.Sin(red);
+            float cos = Mathf.Cos(red);
+
+            return new Quat(nor.x * sin, nor.y * sin, nor.z * sin, cos);
+        }
+
         public static Quat FormEuler(Vec3 v) => FormEuler(v.x, v.y, v.z);
         
         public bool Equals(Quat other)
