@@ -149,7 +149,7 @@ namespace MyMath
             return new Quat(q.x / k, q.y / k, q.z / k, q.w / k);
         }
         
-        //旋转的连接来设置矢量需要右乘
+        //旋转的连接来设置矢量需要左乘
         public static Quat operator *(Quat q1, Quat q2)
         {
             return new Quat
@@ -161,7 +161,7 @@ namespace MyMath
             };
         }
         
-        //这种写法并不是很好，还有一种写法，通过将四元数转换为矩阵，矩阵与矢量相乘，来旋转矢量。
+        //还有一种写法，通过将四元数转换为矩阵，矩阵与矢量相乘，来旋转矢量。（Unity使用的就是这种方法）
         public static Vec3 operator *(Vec3 v, Quat q)
         {
             Quat q1 = new Quat(v.x, v.y, v.z, 0);
